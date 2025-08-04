@@ -1,7 +1,44 @@
-- name: Deploy to Azure Web App - Staging Slot
-  uses: azure/webapps-deploy@v2
-  with:
-    app-name: az104webapp
-    slot-name: Staging
-    publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_STAGING }}
-    package: .
+name: Deploy to Azure Web App - Staging Slot
+
+on:
+  push:
+    branches:
+      - main  # or your deployment branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Deploy to Azure Staging Slot
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: az104webapp
+        slot-name: staging
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_STAGING }}
+        package: .
+
+    # Optional: Swap staging to production after successful deployment
+    - name: Swap staging to production
+      if: success()
+      run: |
+        az webapp deployment slot swap \
+          --name az104webapp \
+          --resource-group az104 \
+          --slot staging \
+          --target-slot production
