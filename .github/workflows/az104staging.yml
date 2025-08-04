@@ -32,13 +32,6 @@ jobs:
         slot-name: staging
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_STAGING }}
         package: .
-
-    # Optional: Swap staging to production after successful deployment
-    - name: Swap staging to production
-      if: success()
-      run: |
-        az webapp deployment slot swap \
-          --name az104webapp \
           --resource-group az104 \
           --slot staging \
           --target-slot production
